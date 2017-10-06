@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 )
@@ -16,13 +17,17 @@ var gSignups = make([]*Signup, 0, 5)
 
 func loadSignups() {
 	if _, err := os.Stat(signupPath); err == nil {
-		if data, err := ioutil.ReadFile(signupPath); err != nil {
+		if data, err := ioutil.ReadFile(signupPath); err == nil {
 			allnames := string(data)
 			names := strings.Split(allnames, "\n")
 			for _, name := range names {
 				gSignups = append(gSignups, &Signup{Name: name})
 			}
+		} else {
+			log.Printf("Failed to read file %s:%v", signupPath, err)
 		}
+	} else {
+		log.Printf("Faile to stat %s:%v", signupPath, err)
 	}
 }
 
@@ -35,8 +40,13 @@ func addSignup(name string) {
 
 	f, err := os.OpenFile(signupPath, os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
+		log.Printf("Cannot open file %s: %v\n", signupPath, err)
 		return
 	}
 	defer f.Close()
-	f.WriteString(name + "\n")
+	if n, err := f.WriteString(name + "\n"); err != nil {
+		log.Printf("Cannot write to file %s:%v", signupPath, err)
+	} else {
+		log.Printf("Write to file %s %d bytes", signupPath, n)
+	}
 }
