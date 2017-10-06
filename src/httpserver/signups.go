@@ -10,7 +10,7 @@ type Signup struct {
 	Name string
 }
 
-const signupPath = "/data/signups"
+const signupPath = "data/signups"
 
 var gSignups = make([]*Signup, 0, 5)
 
