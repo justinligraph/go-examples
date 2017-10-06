@@ -8,7 +8,7 @@ import (
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		r.ParseForm()
-		addSignup(r.Form["user"][0])
+		addSignup(r.Form["name"][0])
 	}
 	signups := getSignups()
 	signupStr := ""
