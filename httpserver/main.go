@@ -6,10 +6,21 @@ import (
 )
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello world!")
+	if r.Method == http.MethodPost {
+		r.ParseForm()
+		addSignup(r.Form["user"][0])
+	}
+	signups := getSignups()
+	signupStr := ""
+	for _, s := range signups {
+		signupStr = signupStr + s.Name + "<br/>"
+	}
+
+	fmt.Fprintf(w, index_html, signupStr)
 }
 
 func main() {
+	loadSignups()
 	http.HandleFunc("/", rootHandler)
 	http.ListenAndServe(":9090", nil)
 }
