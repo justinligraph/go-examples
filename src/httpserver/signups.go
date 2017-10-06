@@ -38,7 +38,7 @@ func getSignups() []*Signup {
 func addSignup(name string) {
 	gSignups = append(gSignups, &Signup{Name: name})
 
-	f, err := os.OpenFile(signupPath, os.O_APPEND|os.O_WRONLY, 0600)
+	f, err := os.OpenFile(signupPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		log.Printf("Cannot open file %s: %v\n", signupPath, err)
 		return
