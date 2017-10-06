@@ -6,7 +6,7 @@ var index_html = `
     Hello world from <p/>
     %s
     <form action="/" method="post">
-      <input type="text" id="name"/> <p/>
+      <input type="text" name="name"/> <p/>
       <input type="submit"/>
     </form>
   </body>
