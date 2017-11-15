@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 )
 
 var (
@@ -36,6 +37,42 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+var commands = map[string][]string{
+	"gpe_reinit": []string{"./ginspect_cmd.sh", "./statushubcli", "poc_gpe_server", "gpe_reinit", "20"},
+	"ls":         []string{"ls"},
+}
+
+func cmdHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	if _, ok := r.Form["cmd"]; !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("cmd is not specified."))
+	} else {
+		cmds := r.Form["cmd"]
+		cmdlines := make([][]string, 0, 10)
+		for _, cmd := range cmds {
+			if cmdline, ok := commands[cmd]; !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(fmt.Sprintf("cmd (%s) is not specified.", cmd)))
+				return
+			} else {
+				cmdlines = append(cmdlines, cmdline)
+			}
+		}
+		for _, cmdln := range cmdlines {
+			cmd := exec.Command(cmdln[0], cmdln[1:]...)
+			if output, err := cmd.CombinedOutput(); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(err.Error()))
+				return
+			} else {
+				w.WriteHeader(http.StatusAccepted)
+				w.Write(output)
+			}
+		}
+	}
+}
+
 func main() {
 	var port = flag.Int("port", 9090, "port to be listened on")
 	var tgtPath = flag.String("target", "tigergraph", "Path to write file to")
@@ -43,5 +80,6 @@ func main() {
 	targetPath = *tgtPath
 
 	http.HandleFunc("/upload", uploadHandler)
+	http.HandleFunc("/cmd", cmdHandler)
 	http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
 }
