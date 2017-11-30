@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -20,6 +21,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.Write([]byte(err.Error()))
 		} else {
+			log.Printf("Writing file %s to %s...\n", fHeader.Filename, targetPath)
 			defer file.Close()
 			if f, err := os.OpenFile(targetPath+"/"+fHeader.Filename, os.O_WRONLY|os.O_CREATE, 0600); err != nil {
 				w.Write([]byte(err.Error()))
@@ -60,6 +62,7 @@ func cmdHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		for _, cmdln := range cmdlines {
+			log.Printf("Executing %s...\n", cmdln)
 			cmd := exec.Command(cmdln[0], cmdln[1:]...)
 			if output, err := cmd.CombinedOutput(); err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -81,5 +84,10 @@ func main() {
 
 	http.HandleFunc("/upload", uploadHandler)
 	http.HandleFunc("/cmd", cmdHandler)
-	http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", *port), nil); err != nil {
+		log.Printf("ListenAndServe failed with %v", err)
+		os.Exit(1)
+	} else {
+		os.Exit(0)
+	}
 }
